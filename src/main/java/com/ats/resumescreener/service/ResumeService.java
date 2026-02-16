@@ -8,6 +8,9 @@ import com.ats.resumescreener.util.TextCleaner;
 import com.ats.resumescreener.util.SkillDictionary;
 import com.ats.resumescreener.util.PdfUtil;
 
+import com.ats.resumescreener.util.VectorUtil;
+import com.ats.resumescreener.util.SimilarityUtil;
+
 @Service
 public class ResumeService {
 
@@ -44,6 +47,7 @@ public class ResumeService {
             var resumeWords = TextCleaner.clean(PdfUtil.extractText(file));
             var jdWords = TextCleaner.clean(jobDescription);
 
+            // Skill-based matching
             var candidateSkills = extractSkills(resumeWords);
             var requiredSkills = extractSkills(jdWords);
 
@@ -54,11 +58,20 @@ public class ResumeService {
                     .filter(candidateSkills::contains)
                     .count();
 
-            double score = requiredSkills.size() > 0 
-                    ? (double) matched / requiredSkills.size() * 100 
-                    : 0;
+            double skillScore = (double) matched / requiredSkills.size() * 100;
 
-            return "Match Score: " + (int) score + "%" +
+            // TF-IDF + Cosine Similarity
+            var vocab = VectorUtil.buildVocab(resumeWords, jdWords);
+            var docs = List.of(resumeWords, jdWords);
+            var resumeVector = VectorUtil.vectorize(resumeWords, vocab, docs);
+            var jdVector = VectorUtil.vectorize(jdWords, vocab, docs);
+            double similarity = SimilarityUtil.cosineSimilarity(resumeVector, jdVector) * 100;
+
+            double overallScore = (skillScore * 0.6) + (similarity * 0.4);
+
+            return "Overall Match Score: " + (int) overallScore + "%" +
+                    "\nSkill Match Score: " + (int) skillScore + "%" +
+                    "\nTF-IDF Match Score: " + (int) similarity + "%" +
                     "\nMatched Skills: " + matched +
                     "\nMissing Skills: " +
                     requiredSkills.stream()
