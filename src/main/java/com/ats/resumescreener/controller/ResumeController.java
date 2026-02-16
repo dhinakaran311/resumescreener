@@ -15,8 +15,16 @@ public class ResumeController {
 
     @Autowired
     ResumeService service;
-
     @PostMapping("/resume")
-    public String uploadFile(@RequestParam("file") MultipartFile file){
+    public String uploadFile(@RequestParam("file") MultipartFile file) {
         return service.handleFile(file);
+    }
+
+    @PostMapping("/match")
+    public String matchResume(
+            @RequestParam("file") MultipartFile file,
+            @RequestParam("jd") String jobDescription) {
+
+        return service.matchResume(file, jobDescription);
+    }
 }
