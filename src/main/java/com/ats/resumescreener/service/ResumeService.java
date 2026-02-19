@@ -8,7 +8,7 @@ import com.ats.resumescreener.util.TextCleaner;
 import com.ats.resumescreener.util.SkillDictionary;
 import com.ats.resumescreener.util.PdfUtil;
 
-import com.ats.resumescreener.model.CandidateScore;
+import com.ats.resumescreener.model.CandidateResult;
 import com.ats.resumescreener.util.VectorUtil;
 import com.ats.resumescreener.util.SimilarityUtil;
 
@@ -96,9 +96,9 @@ public class ResumeService {
         return foundSkills;
     }
 
-    private double calculateScore(
+    private CandidateResult evaluateCandidate(
             MultipartFile file,
-            String jobDescription) throws IOException {
+            String jobDescription) throws Exception {
 
         var resumeWords = TextCleaner.clean(PdfUtil.extractText(file));
         var jdWords = TextCleaner.clean(jobDescription);
@@ -107,13 +107,22 @@ public class ResumeService {
         var requiredSkills = extractSkills(jdWords);
 
         if (requiredSkills.isEmpty())
-            return 0;
+            return new CandidateResult(
+                    file.getOriginalFilename(),
+                    0,
+                    List.of(),
+                    List.of());
 
-        long matched = requiredSkills.stream()
+        var matchedSkills = requiredSkills.stream()
                 .filter(candidateSkills::contains)
-                .count();
+                .toList();
 
-        double skillScore = (double) matched / requiredSkills.size() * 100;
+        var missingSkills = requiredSkills.stream()
+                .filter(skill -> !candidateSkills.contains(skill))
+                .toList();
+
+        double skillScore = (double) matchedSkills.size()
+                / requiredSkills.size() * 100;
 
         var vocab = VectorUtil.buildVocab(resumeWords, jdWords);
         var docs = List.of(resumeWords, jdWords);
@@ -123,35 +132,43 @@ public class ResumeService {
 
         double similarity = SimilarityUtil.cosineSimilarity(resumeVector, jdVector) * 100;
 
-        return (skillScore * 0.6) + (similarity * 0.4);
+        double finalScore = (skillScore * 0.6) +
+                (similarity * 0.4);
+
+        return new CandidateResult(
+                file.getOriginalFilename(),
+                finalScore,
+                matchedSkills,
+                missingSkills);
     }
 
-    public List<CandidateScore> rankCandidates(
+    public List<CandidateResult> rankCandidates(
             MultipartFile[] files,
             String jd) {
 
-        List<CandidateScore> scores = new ArrayList<>();
+        List<CandidateResult> results = new ArrayList<>();
 
         for (MultipartFile file : files) {
 
             try {
-                double score = calculateScore(file, jd);
-
-                scores.add(
-                        new CandidateScore(
-                                file.getOriginalFilename(),
-                                score));
+                results.add(evaluateCandidate(file, jd));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
 
-        return scores.stream()
-                .sorted((a, b) -> Double.compare(
-                        b.getScore(),
-                        a.getScore()))
-                .toList();
+        return results.stream()
+                .sorted((a, b) -> {
+                    int scoreCompare = Double.compare(b.getScore(), a.getScore());
 
+                    if (scoreCompare != 0)
+                        return scoreCompare;
+
+                    return Integer.compare(
+                            b.getMatchedCount(),
+                            a.getMatchedCount());
+                })
+                .toList();
     }
 
 }

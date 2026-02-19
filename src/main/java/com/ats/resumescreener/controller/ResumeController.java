@@ -3,7 +3,7 @@ package com.ats.resumescreener.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import com.ats.resumescreener.model.CandidateScore;
+import com.ats.resumescreener.model.CandidateResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,7 +33,7 @@ public class ResumeController {
     }
 
     @PostMapping("/rank")
-    public List<CandidateScore> rankResumes(
+    public List<CandidateResult> rankResumes(
             @RequestParam("files") MultipartFile[] files,
             @RequestParam("jd") String jobDescription) {
 
