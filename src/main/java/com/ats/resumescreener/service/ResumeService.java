@@ -8,6 +8,7 @@ import com.ats.resumescreener.util.TextCleaner;
 import com.ats.resumescreener.util.SkillDictionary;
 import com.ats.resumescreener.util.PdfUtil;
 
+import com.ats.resumescreener.model.CandidateScore;
 import com.ats.resumescreener.util.VectorUtil;
 import com.ats.resumescreener.util.SimilarityUtil;
 
@@ -28,15 +29,14 @@ public class ResumeService {
                         .filter(skills::contains)
                         .count();
 
-                if(count > 0)
+                if (count > 0)
                     categoryCount.put(category, count);
             });
 
             System.out.println(categoryCount);
             return "Resume processed. Skills detected: " + categoryCount;
 
-        } 
-        catch (IOException e) {
+        } catch (IOException e) {
             return "Error reading PDF";
         }
     }
@@ -51,7 +51,7 @@ public class ResumeService {
             var candidateSkills = extractSkills(resumeWords);
             var requiredSkills = extractSkills(jdWords);
 
-            if(requiredSkills.isEmpty())
+            if (requiredSkills.isEmpty())
                 return "No valid skills found in Job Description.";
 
             long matched = requiredSkills.stream()
@@ -78,8 +78,7 @@ public class ResumeService {
                             .filter(skill -> !candidateSkills.contains(skill))
                             .toList();
 
-        } 
-        catch (IOException e) {
+        } catch (IOException e) {
             return "Error reading PDF";
         }
     }
@@ -96,5 +95,63 @@ public class ResumeService {
 
         return foundSkills;
     }
-}
 
+    private double calculateScore(
+            MultipartFile file,
+            String jobDescription) throws IOException {
+
+        var resumeWords = TextCleaner.clean(PdfUtil.extractText(file));
+        var jdWords = TextCleaner.clean(jobDescription);
+
+        var candidateSkills = extractSkills(resumeWords);
+        var requiredSkills = extractSkills(jdWords);
+
+        if (requiredSkills.isEmpty())
+            return 0;
+
+        long matched = requiredSkills.stream()
+                .filter(candidateSkills::contains)
+                .count();
+
+        double skillScore = (double) matched / requiredSkills.size() * 100;
+
+        var vocab = VectorUtil.buildVocab(resumeWords, jdWords);
+        var docs = List.of(resumeWords, jdWords);
+
+        var resumeVector = VectorUtil.vectorize(resumeWords, vocab, docs);
+        var jdVector = VectorUtil.vectorize(jdWords, vocab, docs);
+
+        double similarity = SimilarityUtil.cosineSimilarity(resumeVector, jdVector) * 100;
+
+        return (skillScore * 0.6) + (similarity * 0.4);
+    }
+
+    public List<CandidateScore> rankCandidates(
+            MultipartFile[] files,
+            String jd) {
+
+        List<CandidateScore> scores = new ArrayList<>();
+
+        for (MultipartFile file : files) {
+
+            try {
+                double score = calculateScore(file, jd);
+
+                scores.add(
+                        new CandidateScore(
+                                file.getOriginalFilename(),
+                                score));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        return scores.stream()
+                .sorted((a, b) -> Double.compare(
+                        b.getScore(),
+                        a.getScore()))
+                .toList();
+
+    }
+
+}

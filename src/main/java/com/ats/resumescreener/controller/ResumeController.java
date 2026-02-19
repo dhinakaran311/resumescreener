@@ -1,6 +1,9 @@
 package com.ats.resumescreener.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import com.ats.resumescreener.model.CandidateScore;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +18,7 @@ public class ResumeController {
 
     @Autowired
     ResumeService service;
+
     @PostMapping("/resume")
     public String uploadFile(@RequestParam("file") MultipartFile file) {
         return service.handleFile(file);
@@ -27,4 +31,13 @@ public class ResumeController {
 
         return service.matchResume(file, jobDescription);
     }
+
+    @PostMapping("/rank")
+    public List<CandidateScore> rankResumes(
+            @RequestParam("files") MultipartFile[] files,
+            @RequestParam("jd") String jobDescription) {
+
+        return service.rankCandidates(files, jobDescription);
+    }
+
 }
