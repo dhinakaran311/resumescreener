@@ -16,6 +16,7 @@ public class MatchResult {
 
     private int matchedCount;
     private int missingCount;
+    private int experienceYears;
 
     @ManyToOne
     @JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
@@ -79,6 +80,14 @@ public class MatchResult {
 
     public void setMissingCount(int missingCount) {
         this.missingCount = missingCount;
+    }
+
+    public int getExperienceYears() {
+        return experienceYears;
+    }
+
+    public void setExperienceYears(int experienceYears) {
+        this.experienceYears = experienceYears;
     }
 
     public void setCandidate(Candidate candidate) {

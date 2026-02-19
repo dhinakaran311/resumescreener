@@ -18,6 +18,7 @@ import com.ats.resumescreener.repository.JobDescriptionRepository;
 import com.ats.resumescreener.repository.MatchResultRepository;
 import com.ats.resumescreener.util.VectorUtil;
 import com.ats.resumescreener.util.SimilarityUtil;
+import com.ats.resumescreener.util.ExperienceUtil;
 
 @Service
 public class ResumeService {
@@ -116,7 +117,10 @@ public class ResumeService {
             MultipartFile file,
             String jobDescription) throws Exception {
 
-        var resumeWords = TextCleaner.clean(PdfUtil.extractText(file));
+        String rawText = PdfUtil.extractText(file);
+        int experienceYears = ExperienceUtil.extractYears(rawText);
+
+        var resumeWords = TextCleaner.clean(rawText);
         var jdWords = TextCleaner.clean(jobDescription);
 
         var candidateSkills = extractSkills(resumeWords);
@@ -151,6 +155,9 @@ public class ResumeService {
         double finalScore = (skillScore * 0.6) +
                 (similarity * 0.4);
 
+        double experienceBoost = Math.min(experienceYears, 5) * 2;
+        finalScore += experienceBoost;
+
         // Persist to DB
         Candidate candidate = candidateRepo.save(
                 new Candidate(file.getOriginalFilename()));
@@ -164,6 +171,7 @@ public class ResumeService {
         matchResult.setTfidfScore(similarity);
         matchResult.setMatchedCount(matchedSkills.size());
         matchResult.setMissingCount(missingSkills.size());
+        matchResult.setExperienceYears(experienceYears);
         matchResult.setCandidate(candidate);
         matchResult.setJobDescription(jdEntity);
         resultRepo.save(matchResult);
@@ -203,6 +211,7 @@ public class ResumeService {
                 })
                 .toList();
     }
+
     public List<MatchResult> getAllResults() {
         return resultRepo.findAll();
     }
