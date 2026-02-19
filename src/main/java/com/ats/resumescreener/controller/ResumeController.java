@@ -3,7 +3,11 @@ package com.ats.resumescreener.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+
+import com.ats.resumescreener.entity.MatchResult;
 import com.ats.resumescreener.model.CandidateResult;
+
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -40,4 +44,9 @@ public class ResumeController {
         return service.rankCandidates(files, jobDescription);
     }
 
+    @GetMapping("/results")
+    public List<MatchResult> fetchResults() {
+        return service.getAllResults();
+    }
+    
 }

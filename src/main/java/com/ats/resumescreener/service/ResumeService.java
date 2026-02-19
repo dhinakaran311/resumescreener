@@ -1,6 +1,7 @@
 package com.ats.resumescreener.service;
 
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.util.*;
@@ -9,11 +10,26 @@ import com.ats.resumescreener.util.SkillDictionary;
 import com.ats.resumescreener.util.PdfUtil;
 
 import com.ats.resumescreener.model.CandidateResult;
+import com.ats.resumescreener.entity.Candidate;
+import com.ats.resumescreener.entity.JobDescription;
+import com.ats.resumescreener.entity.MatchResult;
+import com.ats.resumescreener.repository.CandidateRepository;
+import com.ats.resumescreener.repository.JobDescriptionRepository;
+import com.ats.resumescreener.repository.MatchResultRepository;
 import com.ats.resumescreener.util.VectorUtil;
 import com.ats.resumescreener.util.SimilarityUtil;
 
 @Service
 public class ResumeService {
+
+    @Autowired
+    private CandidateRepository candidateRepo;
+
+    @Autowired
+    private JobDescriptionRepository jdRepo;
+
+    @Autowired
+    private MatchResultRepository resultRepo;
 
     public String handleFile(MultipartFile file) {
 
@@ -135,6 +151,23 @@ public class ResumeService {
         double finalScore = (skillScore * 0.6) +
                 (similarity * 0.4);
 
+        // Persist to DB
+        Candidate candidate = candidateRepo.save(
+                new Candidate(file.getOriginalFilename()));
+
+        JobDescription jdEntity = jdRepo.save(
+                new JobDescription(jobDescription));
+
+        MatchResult matchResult = new MatchResult();
+        matchResult.setFinalScore(finalScore);
+        matchResult.setSkillScore(skillScore);
+        matchResult.setTfidfScore(similarity);
+        matchResult.setMatchedCount(matchedSkills.size());
+        matchResult.setMissingCount(missingSkills.size());
+        matchResult.setCandidate(candidate);
+        matchResult.setJobDescription(jdEntity);
+        resultRepo.save(matchResult);
+
         return new CandidateResult(
                 file.getOriginalFilename(),
                 finalScore,
@@ -169,6 +202,9 @@ public class ResumeService {
                             a.getMatchedCount());
                 })
                 .toList();
+    }
+    public List<MatchResult> getAllResults() {
+        return resultRepo.findAll();
     }
 
 }
