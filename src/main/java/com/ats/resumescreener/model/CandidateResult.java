@@ -1,6 +1,7 @@
 package com.ats.resumescreener.model;
 
 import java.util.List;
+import java.util.Map;
 
 public class CandidateResult {
 
@@ -10,12 +11,14 @@ public class CandidateResult {
     private List<String> missingSkills;
     private int matchedCount;
     private int missingCount;
+    private Map<String, Double> categoryScores;
 
     public CandidateResult(
             String name,
             double score,
             List<String> matchedSkills,
-            List<String> missingSkills) {
+            List<String> missingSkills,
+            Map<String, Double> categoryScores) {
 
         this.name = name;
         this.score = score;
@@ -23,6 +26,7 @@ public class CandidateResult {
         this.missingSkills = missingSkills;
         this.matchedCount = matchedSkills.size();
         this.missingCount = missingSkills.size();
+        this.categoryScores = categoryScores;
     }
 
     public String getName() {
@@ -47,5 +51,9 @@ public class CandidateResult {
 
     public int getMissingCount() {
         return missingCount;
+    }
+
+    public Map<String, Double> getCategoryScores() {
+        return categoryScores;
     }
 }

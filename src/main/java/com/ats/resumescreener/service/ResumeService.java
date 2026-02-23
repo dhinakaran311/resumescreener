@@ -131,7 +131,8 @@ public class ResumeService {
                     file.getOriginalFilename(),
                     0,
                     List.of(),
-                    List.of());
+                    List.of(),
+                    new HashMap<>());
 
         var matchedSkills = requiredSkills.stream()
                 .filter(candidateSkills::contains)
@@ -143,6 +144,28 @@ public class ResumeService {
 
         double skillScore = (double) matchedSkills.size()
                 / requiredSkills.size() * 100;
+
+        // Category-based scoring
+        Map<String, Double> categoryScores = new HashMap<>();
+
+        SkillDictionary.SKILL_MAP.forEach((category, skills) -> {
+
+            long requiredCount = requiredSkills.stream()
+                    .filter(skills::contains)
+                    .count();
+
+            if (requiredCount == 0) {
+                categoryScores.put(category, 0.0);
+                return;
+            }
+
+            long matchedCount = matchedSkills.stream()
+                    .filter(skills::contains)
+                    .count();
+
+            double catScore = (double) matchedCount / requiredCount * 100;
+            categoryScores.put(category, catScore);
+        });
 
         var vocab = VectorUtil.buildVocab(resumeWords, jdWords);
         var docs = List.of(resumeWords, jdWords);
@@ -180,7 +203,8 @@ public class ResumeService {
                 file.getOriginalFilename(),
                 finalScore,
                 matchedSkills,
-                missingSkills);
+                missingSkills,
+                categoryScores);
     }
 
     public List<CandidateResult> rankCandidates(
