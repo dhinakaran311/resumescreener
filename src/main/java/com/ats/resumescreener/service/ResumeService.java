@@ -257,4 +257,16 @@ public class ResumeService {
         return resultRepo.findAll();
     }
 
+    public List<MatchResult> filterByScore(double score) {
+        return resultRepo.findByFinalScoreGreaterThanEqual(score);
+    }
+
+    public List<MatchResult> filterByExperience(int years) {
+        return resultRepo.findByExperienceYearsGreaterThanEqual(years);
+    }
+
+    public List<MatchResult> getTopCandidates() {
+        return resultRepo.findTop5ByOrderByFinalScoreDesc();
+    }
+
 }

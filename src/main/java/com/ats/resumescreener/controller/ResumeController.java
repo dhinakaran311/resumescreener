@@ -48,5 +48,22 @@ public class ResumeController {
     public List<MatchResult> fetchResults() {
         return service.getAllResults();
     }
-    
+
+    @GetMapping("/results/filterScore")
+    public List<MatchResult> filterScore(
+            @RequestParam("minScore") double score) {
+        return service.filterByScore(score);
+    }
+
+    @GetMapping("/results/filterExperience")
+    public List<MatchResult> filterExperience(
+            @RequestParam("minExp") int years) {
+        return service.filterByExperience(years);
+    }
+
+    @GetMapping("/results/top")
+    public List<MatchResult> topCandidates() {
+        return service.getTopCandidates();
+    }
+
 }
