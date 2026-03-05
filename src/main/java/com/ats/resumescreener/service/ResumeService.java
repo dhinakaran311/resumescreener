@@ -20,6 +20,7 @@ import com.ats.resumescreener.util.VectorUtil;
 import com.ats.resumescreener.util.SimilarityUtil;
 import com.ats.resumescreener.util.ExperienceUtil;
 import com.ats.resumescreener.model.ScoreExplanation;
+import com.ats.resumescreener.model.FeatureVector;
 
 @Service
 public class ResumeService {
@@ -205,6 +206,18 @@ public class ResumeService {
                 experienceBoost,
                 categoryScores);
 
+        // Build ML Feature Vector
+        List<Double> featureVector = buildFeatureVector(
+                similarity,
+                skillScore,
+                matchedSkills.size(),
+                missingSkills.size(),
+                experienceYears,
+                categoryScores);
+
+        FeatureVector fv = new FeatureVector(file.getOriginalFilename(), featureVector);
+        System.out.println("Feature Vector [" + fv.getCandidateName() + "]: " + fv.getFeatures());
+
         // Persist to DB
         Candidate candidate = candidateRepo.save(
                 new Candidate(file.getOriginalFilename(), rawText));
@@ -276,6 +289,35 @@ public class ResumeService {
 
     public List<MatchResult> getTopCandidates() {
         return resultRepo.findTop5ByOrderByFinalScoreDesc();
+    }
+
+    private List<Double> buildFeatureVector(
+            double tfidfScore,
+            double skillScore,
+            int matchedCount,
+            int missingCount,
+            int experienceYears,
+            Map<String, Double> categoryScores) {
+
+        List<Double> features = new ArrayList<>();
+
+        features.add(tfidfScore);
+        features.add(skillScore);
+        features.add((double) matchedCount);
+        features.add((double) missingCount);
+        features.add((double) experienceYears);
+
+        features.add(categoryScores.getOrDefault("PROGRAMMING", 0.0));
+        features.add(categoryScores.getOrDefault("BACKEND", 0.0));
+        features.add(categoryScores.getOrDefault("FRONTEND", 0.0));
+        features.add(categoryScores.getOrDefault("DATABASE", 0.0));
+        features.add(categoryScores.getOrDefault("ML_AI", 0.0));
+        features.add(categoryScores.getOrDefault("DATA_SCIENCE", 0.0));
+        features.add(categoryScores.getOrDefault("CLOUD", 0.0));
+        features.add(categoryScores.getOrDefault("DEVOPS", 0.0));
+        features.add(categoryScores.getOrDefault("TOOLS", 0.0));
+
+        return features;
     }
 
 }
