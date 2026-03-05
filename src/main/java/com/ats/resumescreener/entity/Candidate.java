@@ -11,12 +11,30 @@ public class Candidate {
 
     private String name;
 
-    public Candidate() {}
+    @Column(columnDefinition = "TEXT")
+    private String resumeText;
+
+    public Candidate() {
+    }
 
     public Candidate(String name) {
         this.name = name;
     }
 
-    public Long getId() { return id; }
-    public String getName() { return name; }
+    public Candidate(String name, String resumeText) {
+        this.name = name;
+        this.resumeText = resumeText;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getResumeText() {
+        return resumeText;
+    }
 }

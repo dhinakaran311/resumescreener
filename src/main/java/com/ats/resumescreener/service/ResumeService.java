@@ -77,11 +77,18 @@ public class ResumeService {
 
             double skillScore = (double) matched / requiredSkills.size() * 100;
 
-            // TF-IDF + Cosine Similarity
-            var vocab = VectorUtil.buildVocab(resumeWords, jdWords);
-            var docs = List.of(resumeWords, jdWords);
-            var resumeVector = VectorUtil.vectorize(resumeWords, vocab, docs);
-            var jdVector = VectorUtil.vectorize(jdWords, vocab, docs);
+            // TF-IDF + Cosine Similarity (Global Corpus)
+            List<List<String>> corpus = new ArrayList<>();
+            candidateRepo.findAll().forEach(c -> {
+                if (c.getResumeText() != null)
+                    corpus.add(TextCleaner.clean(c.getResumeText()));
+            });
+            corpus.add(resumeWords);
+            corpus.add(jdWords);
+            Set<String> vocab = new HashSet<>(resumeWords);
+            jdWords.forEach(vocab::add);
+            var resumeVector = VectorUtil.vectorize(resumeWords, vocab, corpus);
+            var jdVector = VectorUtil.vectorize(jdWords, vocab, corpus);
             double similarity = SimilarityUtil.cosineSimilarity(resumeVector, jdVector) * 100;
 
             double overallScore = (skillScore * 0.6) + (similarity * 0.4);
@@ -167,11 +174,20 @@ public class ResumeService {
             categoryScores.put(category, catScore);
         });
 
-        var vocab = VectorUtil.buildVocab(resumeWords, jdWords);
-        var docs = List.of(resumeWords, jdWords);
+        // Build Global Corpus for TF-IDF across all stored resumes
+        List<List<String>> corpus = new ArrayList<>();
+        candidateRepo.findAll().forEach(c -> {
+            if (c.getResumeText() != null)
+                corpus.add(TextCleaner.clean(c.getResumeText()));
+        });
+        corpus.add(resumeWords);
+        corpus.add(jdWords);
 
-        var resumeVector = VectorUtil.vectorize(resumeWords, vocab, docs);
-        var jdVector = VectorUtil.vectorize(jdWords, vocab, docs);
+        Set<String> vocab = new HashSet<>();
+        corpus.forEach(vocab::addAll);
+
+        var resumeVector = VectorUtil.vectorize(resumeWords, vocab, corpus);
+        var jdVector = VectorUtil.vectorize(jdWords, vocab, corpus);
 
         double similarity = SimilarityUtil.cosineSimilarity(resumeVector, jdVector) * 100;
 
@@ -183,7 +199,7 @@ public class ResumeService {
 
         // Persist to DB
         Candidate candidate = candidateRepo.save(
-                new Candidate(file.getOriginalFilename()));
+                new Candidate(file.getOriginalFilename(), rawText));
 
         JobDescription jdEntity = jdRepo.save(
                 new JobDescription(jobDescription));
@@ -218,6 +234,7 @@ public class ResumeService {
             try {
                 results.add(evaluateCandidate(file, jd));
             } catch (Exception e) {
+                System.err.println("❌ Failed to process: " + file.getOriginalFilename() + " → " + e.getMessage());
                 e.printStackTrace();
             }
         }
