@@ -19,6 +19,7 @@ import com.ats.resumescreener.repository.MatchResultRepository;
 import com.ats.resumescreener.util.VectorUtil;
 import com.ats.resumescreener.util.SimilarityUtil;
 import com.ats.resumescreener.util.ExperienceUtil;
+import com.ats.resumescreener.model.ScoreExplanation;
 
 @Service
 public class ResumeService {
@@ -197,6 +198,13 @@ public class ResumeService {
         double experienceBoost = Math.min(experienceYears, 5) * 2;
         finalScore += experienceBoost;
 
+        ScoreExplanation explanation = new ScoreExplanation(
+                skillScore,
+                similarity,
+                experienceYears,
+                experienceBoost,
+                categoryScores);
+
         // Persist to DB
         Candidate candidate = candidateRepo.save(
                 new Candidate(file.getOriginalFilename(), rawText));
@@ -220,7 +228,8 @@ public class ResumeService {
                 finalScore,
                 matchedSkills,
                 missingSkills,
-                categoryScores);
+                categoryScores,
+                explanation);
     }
 
     public List<CandidateResult> rankCandidates(

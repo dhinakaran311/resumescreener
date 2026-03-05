@@ -12,7 +12,9 @@ public class CandidateResult {
     private int matchedCount;
     private int missingCount;
     private Map<String, Double> categoryScores;
+    private ScoreExplanation explanation;
 
+    // Used for early-return (no required skills found)
     public CandidateResult(
             String name,
             double score,
@@ -27,6 +29,25 @@ public class CandidateResult {
         this.matchedCount = matchedSkills.size();
         this.missingCount = missingSkills.size();
         this.categoryScores = categoryScores;
+    }
+
+    // Full constructor with explanation
+    public CandidateResult(
+            String name,
+            double score,
+            List<String> matchedSkills,
+            List<String> missingSkills,
+            Map<String, Double> categoryScores,
+            ScoreExplanation explanation) {
+
+        this.name = name;
+        this.score = score;
+        this.matchedSkills = matchedSkills;
+        this.missingSkills = missingSkills;
+        this.matchedCount = matchedSkills.size();
+        this.missingCount = missingSkills.size();
+        this.categoryScores = categoryScores;
+        this.explanation = explanation;
     }
 
     public String getName() {
@@ -55,5 +76,9 @@ public class CandidateResult {
 
     public Map<String, Double> getCategoryScores() {
         return categoryScores;
+    }
+
+    public ScoreExplanation getExplanation() {
+        return explanation;
     }
 }
