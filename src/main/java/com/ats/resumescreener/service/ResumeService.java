@@ -19,6 +19,7 @@ import com.ats.resumescreener.repository.MatchResultRepository;
 import com.ats.resumescreener.util.VectorUtil;
 import com.ats.resumescreener.util.SimilarityUtil;
 import com.ats.resumescreener.util.ExperienceUtil;
+import com.ats.resumescreener.util.DatasetAppender;
 import com.ats.resumescreener.model.ScoreExplanation;
 import com.ats.resumescreener.model.FeatureVector;
 
@@ -33,6 +34,9 @@ public class ResumeService {
 
     @Autowired
     private MatchResultRepository resultRepo;
+
+    @Autowired
+    private DatasetAppender datasetAppender;
 
     public String handleFile(MultipartFile file) {
 
@@ -217,6 +221,22 @@ public class ResumeService {
 
         FeatureVector fv = new FeatureVector(file.getOriginalFilename(), featureVector);
         System.out.println("Feature Vector [" + fv.getCandidateName() + "]: " + fv.getFeatures());
+
+        // Auto-append this resume's features to ML training dataset
+        datasetAppender.appendRow(
+                similarity, // tfidfScore
+                skillScore, // skillScore
+                matchedSkills.size(), // matchedCount
+                missingSkills.size(), // missingCount
+                experienceYears, // experienceYears
+                categoryScores.getOrDefault("PROGRAMMING", 0.0), // programmingScore
+                categoryScores.getOrDefault("BACKEND", 0.0), // backendScore
+                categoryScores.getOrDefault("FRONTEND", 0.0), // frontendScore
+                categoryScores.getOrDefault("DATABASE", 0.0), // databaseScore
+                categoryScores.getOrDefault("CLOUD", 0.0), // cloudScore
+                categoryScores.getOrDefault("DEVOPS", 0.0), // devopsScore
+                finalScore // used to derive label
+        );
 
         // Persist to DB
         Candidate candidate = candidateRepo.save(
