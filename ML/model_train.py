@@ -10,6 +10,7 @@ Run:
     python ML/model_train.py
 """
 
+
 import os
 import numpy as np
 import pandas as pd
@@ -24,13 +25,13 @@ from sklearn.metrics import (
 # ─── 1. LOAD DATASET ────────────────────────────────────────────────────────
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-DATASET_PATH = os.path.join(SCRIPT_DIR, "dataset.csv")
+DATASET_PATH = os.path.join(SCRIPT_DIR, "..", "ats_training_dataset_1000.csv")
 MODEL_PATH   = os.path.join(SCRIPT_DIR, "trained_model.onnx")
 
 FEATURE_COLS = [
     "tfidfScore", "skillScore", "matchedCount", "missingCount",
     "experienceYears", "programmingScore", "backendScore",
-    "frontendScore", "databaseScore", "cloudScore", "devopsScore"
+    "frontendScore", "databaseScore", "mlAiScore", "dataScienceScore", "cloudScore", "devopsScore", "toolsScore"
 ]
 LABEL_COL = "label"
 
@@ -59,10 +60,10 @@ for lbl, cnt in label_counts.items():
 
 imbalance_ratio = label_counts.max() / label_counts.min()
 if imbalance_ratio > 2.0:
-    print(f"    ⚠ Imbalance ratio {imbalance_ratio:.1f}x detected → using class_weight='balanced'")
+    print(f"    [WARNING] Imbalance ratio {imbalance_ratio:.1f}x detected -> using class_weight='balanced'")
     class_weight = "balanced"
 else:
-    print(f"    ✓ Balance looks good (ratio {imbalance_ratio:.1f}x)")
+    print(f"    [OK] Balance looks good (ratio {imbalance_ratio:.1f}x)")
     class_weight = None
 
 # ─── 4. REMOVE OUTLIERS ─────────────────────────────────────────────────────
@@ -77,15 +78,18 @@ RANGES = {
     "backendScore":    (0, 100),
     "frontendScore":   (0, 100),
     "databaseScore":   (0, 100),
+    "mlAiScore":       (0, 100),
+    "dataScienceScore":(0, 100),
     "cloudScore":      (0, 100),
     "devopsScore":     (0, 100),
+    "toolsScore":      (0, 100),
 }
 
 original_len = len(df)
 for col, (lo, hi) in RANGES.items():
     df = df[(df[col] >= lo) & (df[col] <= hi)]
 removed = original_len - len(df)
-print(f"\n[3] Outlier Removal: {removed} rows removed → {len(df)} rows remain")
+print(f"\n[3] Outlier Removal: {removed} rows removed -> {len(df)} rows remain")
 
 # ─── 5. TRAIN / TEST SPLIT ──────────────────────────────────────────────────
 
@@ -112,7 +116,7 @@ pipeline = Pipeline([
 
 print(f"\n[5] Training Logistic Regression ...")
 pipeline.fit(X_train, y_train)
-print("    ✓ Training complete")
+print("    [OK] Training complete")
 
 # ─── 7. EVALUATE ────────────────────────────────────────────────────────────
 
@@ -142,11 +146,11 @@ try:
     with open(MODEL_PATH, "wb") as f:
         f.write(onnx_model.SerializeToString())
 
-    print(f"\n[7] ONNX Model exported → {MODEL_PATH}")
-    print("    ✓ Ready for Java ATS Phase 17 integration")
+    print(f"\n[7] ONNX Model exported -> {MODEL_PATH}")
+    print("    [OK] Ready for Java ATS Phase 17 integration")
 
 except ImportError:
-    print("\n[7] ⚠ skl2onnx not installed — ONNX export skipped.")
+    print("\n[7] [WARNING] skl2onnx not installed — ONNX export skipped.")
     print("    To install: pip install skl2onnx onnx")
     print("    Saving as pickle fallback instead ...")
 
@@ -154,7 +158,7 @@ except ImportError:
     pickle_path = os.path.join(SCRIPT_DIR, "trained_model.pkl")
     with open(pickle_path, "wb") as f:
         pickle.dump(pipeline, f)
-    print(f"    ✓ Pickle model saved → {pickle_path}")
+    print(f"    [OK] Pickle model saved -> {pickle_path}")
 
 print("\n" + "=" * 60)
 print("  Phase 16 Complete! Model is ready.")

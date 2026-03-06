@@ -197,18 +197,7 @@ public class ResumeService {
 
         double similarity = SimilarityUtil.cosineSimilarity(resumeVector, jdVector) * 100;
 
-        double finalScore = (skillScore * 0.6) +
-                (similarity * 0.4);
-
         double experienceBoost = Math.min(experienceYears, 5) * 2;
-        finalScore += experienceBoost;
-
-        ScoreExplanation explanation = new ScoreExplanation(
-                skillScore,
-                similarity,
-                experienceYears,
-                experienceBoost,
-                categoryScores);
 
         // Build ML Feature Vector
         List<Double> featureVector = buildFeatureVector(
@@ -217,6 +206,22 @@ public class ResumeService {
                 matchedSkills.size(),
                 missingSkills.size(),
                 experienceYears,
+                categoryScores);
+
+        // ML Prediction
+        double mlScore = com.ats.resumescreener.util.MLModelUtil.predict(featureVector);
+        System.out.println("ML Score: " + mlScore);
+
+        double ruleScore = (skillScore * 0.6) + (similarity * 0.4);
+
+        // Hybrid Score: 70% ML, 30% Rules
+        double finalScore = (mlScore * 100 * 0.7) + (ruleScore * 0.3) + experienceBoost;
+
+        ScoreExplanation explanation = new ScoreExplanation(
+                skillScore,
+                similarity,
+                experienceYears,
+                experienceBoost,
                 categoryScores);
 
         FeatureVector fv = new FeatureVector(file.getOriginalFilename(), featureVector);
