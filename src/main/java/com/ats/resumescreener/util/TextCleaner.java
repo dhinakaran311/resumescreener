@@ -11,7 +11,10 @@ public class TextCleaner {
             "of", "by", "from", "as", "it", "this", "that",
             "using", "used", "built", "developed",
             "project", "projects", "link", "current",
-            "year", "role", "work", "experience");
+            "year", "role", "work", "experience", "also",
+            "have", "has", "had", "will", "would", "should",
+            "could", "can", "may", "might", "must", "shall"
+    );
 
     public static List<String> clean(String text) {
 

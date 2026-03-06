@@ -8,37 +8,37 @@ public class SkillDictionary {
 
         "PROGRAMMING", Set.of(
                 "java","python","c","cpp","javascript",
-                "typescript","go","rust","kotlin"
+                "typescript","go","rust","kotlin","js","ts"
         ),
 
         "BACKEND", Set.of(
                 "spring","springboot","hibernate",
                 "node","express","django","flask",
-                "fastapi","microservices","rest"
+                "fastapi","microservices","rest","restful","api","apis"
         ),
 
         "FRONTEND", Set.of(
                 "html","css","react","angular",
-                "vue","nextjs","tailwind"
+                "vue","nextjs","tailwind","javascript","typescript"
         ),
 
         "DATABASE", Set.of(
                 "sql","mysql","postgresql",
                 "mongodb","oracle","redis",
-                "firebase","cassandra"
+                "firebase","cassandra","nosql"
         ),
 
         "ML_AI", Set.of(
-                "machinelearning","machine","learning",
+                "machinelearning","machine","learning","ml","ai",
                 "deeplearning","nlp","tensorflow",
-                "pytorch","scikitlearn","opencv",
-                "transformers","bert"
+                "pytorch","scikitlearn","opencv","sklearn",
+                "transformers","bert","artificial","intelligence"
         ),
 
         "DATA_SCIENCE", Set.of(
                 "pandas","numpy","matplotlib",
                 "seaborn","featureengineering",
-                "dataanalysis"
+                "dataanalysis","datascience","analytics"
         ),
 
         "CLOUD", Set.of(

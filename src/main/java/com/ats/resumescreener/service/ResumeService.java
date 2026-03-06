@@ -214,8 +214,29 @@ public class ResumeService {
 
         double ruleScore = (skillScore * 0.6) + (similarity * 0.4);
 
-        // Hybrid Score: 70% ML, 30% Rules
-        double finalScore = (mlScore * 100 * 0.7) + (ruleScore * 0.3) + experienceBoost;
+        // Hybrid Score: 50% ML, 50% Rules (more balanced)
+        double finalScore;
+        
+        if (mlScore > 0.1) { // Only use ML if model is working
+            finalScore = (mlScore * 100 * 0.5) + (ruleScore * 0.5) + experienceBoost;
+        } else {
+            // Fallback to rule-based only if ML model fails
+            finalScore = ruleScore + experienceBoost;
+        }
+
+        // Debug logging
+        System.out.println("=== SCORING DEBUG ===");
+        System.out.println("Candidate: " + file.getOriginalFilename());
+        System.out.println("Required Skills: " + requiredSkills);
+        System.out.println("Candidate Skills: " + candidateSkills);
+        System.out.println("Matched Skills: " + matchedSkills);
+        System.out.println("Skill Score: " + skillScore);
+        System.out.println("TF-IDF Score: " + similarity);
+        System.out.println("ML Score: " + mlScore);
+        System.out.println("Rule Score: " + ruleScore);
+        System.out.println("Experience Boost: " + experienceBoost);
+        System.out.println("Final Score: " + finalScore);
+        System.out.println("===================");
 
         ScoreExplanation explanation = new ScoreExplanation(
                 skillScore,
